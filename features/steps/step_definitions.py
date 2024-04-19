@@ -8,6 +8,22 @@ from behave import *
 import time
 
 
+# Dictionary mapping descriptions to element IDs
+radio_button_ids = {
+    # User selection descriptions
+    "Content contains nudity or sexual material": "user_select--explicit_content",
+    "Content contains your personal information": "user_select--nonexplicit_personal_pii",
+    "Content is on a site with exploitative removal practices": "user_select--predatory_removals",
+    "Content shows a person under 18": "user_select--nonexplicit_minor",
+    # PII field descriptions
+    "Address, phone number, and/or e-mail address": "pii_field--contact",
+    "Confidential government identification numbers": "pii_field--govt",
+    "Bank account or credit card number": "pii_field--bank",
+    "Images of a handwritten signature or an ID doc": "pii_field--signature",
+    "Highly personal, restricted, and official records": "pii_field--medical",
+    "Confidential login credentials": "pii_field--login"
+}
+
 def wait_for_element(context, element_locator, by=By.CSS_SELECTOR, timeout=10):
     """
     Wait for an element to become visible and interactable on the page.
@@ -31,8 +47,9 @@ def step_impl(context):
     next_button = context.browser.find_element(By.XPATH, "//button[contains(@class, 'next-button') and text()='Next']")
     next_button.click()
 
-@then('I select the radio button with id "{radio_id}"')
-def step_impl(context, radio_id):
+@then('I select "{description}"')
+def step_impl(context, description):
+    radio_id = radio_button_ids[description]  # Get the id from the description
     wait_for_element(context, f"label[for='{radio_id}']")
     radio_label = context.browser.find_element(By.CSS_SELECTOR, f"label[for='{radio_id}']")
     radio_label.click()
