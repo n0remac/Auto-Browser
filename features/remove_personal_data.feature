@@ -4,16 +4,11 @@ Feature: Personal Data Removal Request
   Scenario Outline: Submitting a personal data removal request
     Given I am on the data store site's removal page
     Then I click the "Start removal request" button
-    When I pause on a page for "<seconds>" seconds
+    Then I select "Content contains your personal information"
+    Then I click the "Next" button
+    Then I select "Bank account or credit card number"
+    Then I pause on a page for "<seconds>" seconds
 
     Examples:
       | seconds |
-      | 5       |
-      
-    # When I enter the name "<name>" and message "<message>"
-    # And I submit the request
-    # Then I should see a confirmation message
-
-    # Examples:
-    #   | name     | message                        |
-    #   | John Doe | Please remove my personal data |
+      | 5     |
