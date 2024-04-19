@@ -6,6 +6,10 @@ from behave.runner import Context
 from behave import *
 
 import time
+import json
+
+from openai import OpenAI
+client = OpenAI()
 
 
 # Dictionary mapping descriptions to element IDs
@@ -24,6 +28,8 @@ radio_button_ids = {
     "Confidential login credentials": "pii_field--login"
 }
 
+BASE_URL = "https://support.google.com/websearch/answer/9673730"
+
 def wait_for_element(context, element_locator, by=By.CSS_SELECTOR, timeout=10):
     """
     Wait for an element to become visible and interactable on the page.
@@ -32,24 +38,62 @@ def wait_for_element(context, element_locator, by=By.CSS_SELECTOR, timeout=10):
         EC.visibility_of_element_located((by, element_locator))
     )
 
-@given('I am on the data store site\'s removal page')
-def step_impl(context: Context):
-    context.browser = webdriver.Chrome()
-    context.browser.get("https://support.google.com/websearch/answer/9673730")
+def send_html_to_chatgpt(html_content):
+    """
+    Sends HTML content to ChatGPT and returns IDs or instructions.
+    """
 
-@then('I click the "Start removal request" link')
-def step_impl(context: Context):
-    button = context.browser.find_element(By.LINK_TEXT, "Start removal request")
-    button.click()
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a web developer and you have been given a task to parse an HTML document and return new radio button IDs."},
+            {"role": "user", "content": html_content}
+        ]
+    )
+
+    return response.model_dump_json()
+
+def update_radio_button_ids(file_path, new_ids):
+    """
+    Function to update radio button IDs from the response file.
+    """
+    with open(file_path, 'w') as file:
+        json.dump(new_ids, file)
+
+@then('I extract and send the HTML to ChatGPT')
+def step_impl(context):
+    html_content = context.browser.page_source
+    response = send_html_to_chatgpt(html_content)
+    # Assuming response contains new IDs
+    context.new_ids = response['choices'][0]['text']
+
+@then('I save the new radio IDs into a file')
+def step_impl(context):
+    update_radio_button_ids('new_radio_ids.json', context.new_ids)
+
+@then('I return to the initial data removal page')
+def step_impl(context):
+    context.browser.get(BASE_URL)
+    time.sleep(2)
+
+@given('I am on the Google data store site\'s removal page')
+def step_impl(context):
+    context.browser = webdriver.Chrome()
+    context.browser.get(BASE_URL)
+
+@when('I click the "Start removal request" link')
+def step_impl(context):
+    start_link = context.browser.find_element(By.LINK_TEXT, "Start removal request")
+    start_link.click()
 
 @then('I click the "Next" button')
 def step_impl(context):
     next_button = context.browser.find_element(By.XPATH, "//button[contains(@class, 'next-button') and text()='Next']")
     next_button.click()
 
-@then('I select "{description}"')
+@when('I select "{description}"')
 def step_impl(context, description):
-    radio_id = radio_button_ids[description]  # Get the id from the description
+    radio_id = radio_button_ids[description]
     wait_for_element(context, f"label[for='{radio_id}']")
     radio_label = context.browser.find_element(By.CSS_SELECTOR, f"label[for='{radio_id}']")
     radio_label.click()
