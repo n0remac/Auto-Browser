@@ -44,7 +44,7 @@ def send_html_to_chatgpt(html_content):
     """
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a web developer and you have been given a task to parse an HTML document and return new radio button IDs."},
             {"role": "user", "content": html_content}
@@ -91,9 +91,9 @@ def step_impl(context):
     next_button = context.browser.find_element(By.XPATH, "//button[contains(@class, 'next-button') and text()='Next']")
     next_button.click()
 
-@when('I select "{description}"')
+@then('I select "{description}"')
 def step_impl(context, description):
-    radio_id = radio_button_ids[description]
+    radio_id = radio_button_ids[description]  # Get the id from the description
     wait_for_element(context, f"label[for='{radio_id}']")
     radio_label = context.browser.find_element(By.CSS_SELECTOR, f"label[for='{radio_id}']")
     radio_label.click()
