@@ -1,11 +1,11 @@
 from behave import *
 import json
+# import ElementHandle
+
 
 # Define your interactable elements list
 INTERACTABLE_ELEMENTS = [
-    "button", "a", "input", "select", "option", "datalist", 
-    "label", "fieldset", "legend", "map", "area", "output", "progress", 
-    "meter", "summary", "details", "form"
+    "input"
 ]
 MAIN_PAGE="https://support.google.com/websearch/answer/9673730"
 @given('I am on the specified web page')
@@ -17,9 +17,7 @@ def step_impl(context):
     elements_data = {}
     for tag in INTERACTABLE_ELEMENTS:
         elements = context.page.query_selector_all(tag)
-        visible_elements = [element for element in elements if element.is_visible()]
-        elements_data[tag] = [element.inner_html() for element in visible_elements]
-
+        elements_data[tag] = [element.get_attribute('id') for element in elements]
 
     with open("start_removeal.json", 'w') as f:
         json.dump(elements_data, f, indent=4)
